@@ -1,2 +1,2 @@
-# donation-dapp
-A decentralised application for managing donations
+# Donation dApp
+A decentralized application for managing donations
