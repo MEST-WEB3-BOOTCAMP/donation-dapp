@@ -12,7 +12,7 @@ contract Cause is Pausable, Ownable {
     address public beneficiary;
     uint256 public goal;
     uint256 public deadline;
-    uint256 public totalDonations;
+    uint256 public balance;
 
     event CauseCreated(
         uint256 indexed id,
@@ -20,7 +20,8 @@ contract Cause is Pausable, Ownable {
         string description,
         string image,
         uint256 goal,
-        uint256 deadline
+        uint256 deadline,
+        uint256 balance
     );
 
     event CausePaused(uint256 indexed causeId);
@@ -43,8 +44,16 @@ contract Cause is Pausable, Ownable {
         goal = _goal;
         deadline = _deadline;
         beneficiary = _beneficiary;
-        totalDonations = 0;
-        emit CauseCreated(id, name, description, image, goal, deadline);
+        balance = 0;
+        emit CauseCreated(
+            id,
+            name,
+            description,
+            image,
+            goal,
+            deadline,
+            balance
+        );
     }
 
     function pause() public onlyOwner {
@@ -62,10 +71,10 @@ contract Cause is Pausable, Ownable {
     }
 
     function addDonation(uint256 _amount) public onlyOwner {
-        totalDonations += _amount;
+        balance += _amount;
     }
 
     function deductDonation(uint256 _amount) public onlyOwner {
-        totalDonations -= _amount;
+        balance -= _amount;
     }
 }
