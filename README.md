@@ -1,5 +1,3 @@
-# Donation dApp
+## Overview
 
-A decentralized application for managing donations.
-The application allow donors to make contributions in MATIC to a specific cause or organization.
-It will also provide transparency and accountability in tracking and managing donated funds.
+Welcome! This decentralized application (dapp) is built on the Ethereum blockchain using the Hardhat development framework for the backend and nuxtjs for the frontend. It demonstrates a basic Hardhat use case in conjunction with a javascript library.

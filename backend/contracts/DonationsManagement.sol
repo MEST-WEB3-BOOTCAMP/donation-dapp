@@ -38,7 +38,7 @@ contract DonationsManagement is Ownable {
 
     event CausePaused(uint256 indexed causeId);
 
-    event CauseUnpaused(uint256 indexed causeId);
+    event CauseUnPaused(uint256 indexed causeId);
 
     event CauseUpdated(
         uint256 indexed causeId,
@@ -78,10 +78,7 @@ contract DonationsManagement is Ownable {
     }
 
     modifier whenCauseExists(uint256 _causeId) {
-        require(
-            address(causes[_causeId]) != address(0),
-            "DonationApp: cause does not exist"
-        );
+        require(address(causes[_causeId]) != address(0), "DonationApp: cause does not exist");
         _;
     }
 
@@ -160,16 +157,13 @@ contract DonationsManagement is Ownable {
         whenCauseExists(_causeId)
     {
         require(
-            causes[_causeId].beneficiary() == msg.sender,
-            "Only the beneficiary can withdraw donations"
+            causes[_causeId].beneficiary() == msg.sender, "Only the beneficiary can withdraw donations"
         );
         require(
-            causes[_causeId].balance() >= _amount,
-            "Withdrawal amount must be less than or equal to total donations"
+            causes[_causeId].balance() >= _amount, "Withdrawal amount must be less than or equal to total donations"
         );
         require(
-            keccak256(abi.encode(_reason)) != keccak256(""),
-            "Withdrawal reason cannot be empty"
+            keccak256(abi.encode(_reason)) != keccak256(""), "Withdrawal reason cannot be empty"
         );
         Cause cause = causes[_causeId];
         cause.debit(_amount);
