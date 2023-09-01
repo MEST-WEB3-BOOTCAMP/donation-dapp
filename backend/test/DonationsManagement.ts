@@ -6,13 +6,13 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 describe("DonationsManagement", function () {
-  async function deployDonationAppFixture() {
+  async function deployDonationsMgtFixture() {
     const [owner, otherAccount] = await ethers.getSigners();
-    const DonationApp = await ethers.getContractFactory("DonationsManagement");
-    const donationApp = await DonationApp.deploy();
+    const DonationsMgt = await ethers.getContractFactory("DonationsManagement");
+    const donationsMgt = await DonationsMgt.deploy();
 
     return {
-      donationApp,
+      donationsMgt,
       owner,
       otherAccount,
     };
@@ -20,23 +20,23 @@ describe("DonationsManagement", function () {
 
   describe("Deployment", function () {
     it("should set the right owner", async function () {
-      const { donationApp, owner, otherAccount } = await loadFixture(
-        deployDonationAppFixture
+      const { donationsMgt, owner, otherAccount } = await loadFixture(
+        deployDonationsMgtFixture
       );
 
-      expect(await donationApp.owner()).to.equal(owner.address);
-      expect(await donationApp.owner()).to.not.equal(otherAccount.address);
+      expect(await donationsMgt.owner()).to.equal(owner.address);
+      expect(await donationsMgt.owner()).to.not.equal(otherAccount.address);
     });
   });
 
   describe("Methods", function () {
     describe("addCause", function () {
       it("should add a new cause", async function () {
-        const { donationApp, owner } = await loadFixture(
-          deployDonationAppFixture
+        const { donationsMgt, otherAccount } = await loadFixture(
+          deployDonationsMgtFixture
         );
 
-        await donationApp.addCause(
+        await donationsMgt.addCause(
           "Test Cause",
           "This is a test cause",
           "",
@@ -44,13 +44,24 @@ describe("DonationsManagement", function () {
           (await time.latest()) + time.duration.days(10)
         );
 
-        expect(await donationApp.causeCount()).to.equal(1);
-        expect(await donationApp.causeCount()).to.not.equal(0);
+        expect(await donationsMgt.causeCount()).to.equal(1);
+
+        await donationsMgt
+          .connect(otherAccount)
+          .addCause(
+            "Test Cause 1",
+            "This is another test cause",
+            "",
+            50,
+            (await time.latest()) + time.duration.days(10)
+          );
+        expect(await donationsMgt.causeCount()).to.not.equal(0);
+        expect(await donationsMgt.causeCount()).to.equal(2);
       });
 
       it("should emit a CauseAdded event", async function () {
-        const { donationApp, otherAccount } = await loadFixture(
-          deployDonationAppFixture
+        const { donationsMgt, otherAccount } = await loadFixture(
+          deployDonationsMgtFixture
         );
         const causeName = "Test Cause";
         const causeDescription = "This is a test cause";
@@ -59,7 +70,7 @@ describe("DonationsManagement", function () {
         const causeGoal = 100;
 
         await expect(
-          donationApp
+          donationsMgt
             .connect(otherAccount)
             .addCause(
               causeName,
@@ -69,7 +80,7 @@ describe("DonationsManagement", function () {
               deadline
             )
         )
-          .to.emit(donationApp, "CauseAdded")
+          .to.emit(donationsMgt, "CauseAdded")
           .withArgs(
             1,
             causeName,

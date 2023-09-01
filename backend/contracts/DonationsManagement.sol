@@ -70,7 +70,6 @@ contract DonationsManagement is Ownable {
     mapping(uint256 => Cause) public causes;
     mapping(address => uint256) donors;
     uint256 public totalDonations;
-    address[] public donorsList;
 
     modifier whenAmountGreaterThanZero(uint256 _amount) {
         require(_amount > 0, "Amount must be greater than 0");
@@ -88,7 +87,7 @@ contract DonationsManagement is Ownable {
         string memory _image,
         uint256 _goal,
         uint256 _deadline
-    ) public {
+    ) external {
         _causeIds.increment();
         uint256 _id = _causeIds.current();
         Cause cause = new Cause(
@@ -101,24 +100,30 @@ contract DonationsManagement is Ownable {
             _deadline
         );
         causes[_id] = cause;
+
         emit CauseAdded(_id, _name, _description, _image, _goal, _deadline, 0);
     }
 
     function donateToCause(
         uint256 _causeId,
         uint256 _amount,
-        string calldata _message // optional
+        string memory _message // optional
     )
-        public
+        external
         payable
         whenAmountGreaterThanZero(_amount)
         whenCauseExists(_causeId)
     {
         Cause cause = causes[_causeId];
-        require(cause.paused() == false, "DonationApp: cause paused");
-        require(cause.expired() == false, "DonationApp: cause expired");
-        require(_amount > msg.value, "DonationApp: insufficient funds");
+        require(cause.paused() == false, "DonationsManagement: cause paused");
+        require(cause.expired() == false, "DonationsManagement: cause expired");
+        require(_amount > msg.value, "DonationsManagement: insufficient funds");
 
+        if (keccak256(abi.encode(_message)) == keccak256("")) {
+            _message = "No message";
+        }
+
+        payable(address(this)).transfer(_amount);
         _donationIds.increment();
         uint256 _id = _donationIds.current();
         Donation memory donation = Donation(
@@ -131,12 +136,7 @@ contract DonationsManagement is Ownable {
         donations[_id] = donation;
         cause.credit(_amount);
         totalDonations += _amount;
-        if (donors[msg.sender] == 0) {
-            donors[msg.sender] = _amount;
-            donorsList.push(msg.sender);
-        } else {
-            donors[msg.sender] += _amount;
-        }
+        donors[msg.sender] += _amount;
         emit DonationMade(
             _causeId,
             msg.sender,
@@ -151,13 +151,13 @@ contract DonationsManagement is Ownable {
         uint256 _amount,
         string calldata _reason //required
     )
-        public
+        external
         payable
         whenAmountGreaterThanZero(_amount)
         whenCauseExists(_causeId)
     {
         require(
-            causes[_causeId].beneficiary() == msg.sender, "Only the beneficiary can withdraw donations"
+            causes[_causeId].beneficiary() == msg.sender, "Only beneficiary can withdraw donations"
         );
         require(
             causes[_causeId].balance() >= _amount, "Withdrawal amount must be less than or equal to total donations"
@@ -165,9 +165,11 @@ contract DonationsManagement is Ownable {
         require(
             keccak256(abi.encode(_reason)) != keccak256(""), "Withdrawal reason cannot be empty"
         );
+
         Cause cause = causes[_causeId];
         cause.debit(_amount);
         payable(msg.sender).transfer(_amount);
+
         emit WithdrawalMade(
             _causeId,
             msg.sender,
@@ -177,7 +179,7 @@ contract DonationsManagement is Ownable {
         );
     }
 
-    function getAllCauses() public view returns (Cause[] memory) {
+    function getAllCauses() external view returns (Cause[] memory) {
         Cause[] memory _causes = new Cause[](_causeIds.current());
         for (uint256 i = 1; i <= _causeIds.current(); i++) {
             _causes[i - 1] = causes[i];
@@ -185,11 +187,11 @@ contract DonationsManagement is Ownable {
         return _causes;
     }
 
-    function causeCount() public view virtual returns (uint256) {
+    function causeCount() external view virtual returns (uint256) {
         return _causeIds.current();
     }
 
-    function donationCount() public view virtual returns (uint256) {
+    function donationCount() external view virtual returns (uint256) {
         return _donationIds.current();
     }
 }
