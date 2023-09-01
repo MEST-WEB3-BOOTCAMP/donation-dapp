@@ -5,36 +5,62 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Cause.sol";
 
-contract DonationApp is Ownable {
+contract DonationsManagement is Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _donationIds;
     Counters.Counter private _causeIds;
 
     struct Donation {
         uint256 causeId;
+        address donor;
         uint256 amount;
         string message;
-        address payable donor;
         uint256 date;
     }
 
     struct Withdrawal {
         uint256 causeId;
+        address beneficiary;
         uint256 amount;
         string reason;
         uint256 date;
     }
 
+    event CauseAdded(
+        uint256 indexed id,
+        string name,
+        string description,
+        string image,
+        uint256 goal,
+        uint256 deadline,
+        uint256 balance
+    );
+
+    event CausePaused(uint256 indexed causeId);
+
+    event CauseUnpaused(uint256 indexed causeId);
+
+    event CauseUpdated(
+        uint256 indexed causeId,
+        string name,
+        string description,
+        string image,
+        uint256 goal,
+        uint256 deadline,
+        uint256 balance
+    );
+
     event DonationMade(
         uint256 indexed causeId,
+        address indexed donor,
         uint256 amount,
         string message,
-        address indexed donor,
         uint256 date
     );
 
     event WithdrawalMade(
         uint256 indexed causeId,
+        address indexed beneficiary,
         uint256 amount,
         string reason,
         uint256 date
@@ -46,8 +72,16 @@ contract DonationApp is Ownable {
     uint256 public totalDonations;
     address[] public donorsList;
 
-    modifier amountGreaterThanZero(uint256 _amount) {
+    modifier whenAmountGreaterThanZero(uint256 _amount) {
         require(_amount > 0, "Amount must be greater than 0");
+        _;
+    }
+
+    modifier whenCauseExists(uint256 _causeId) {
+        require(
+            address(causes[_causeId]) != address(0),
+            "DonationApp: cause does not exist"
+        );
         _;
     }
 
@@ -70,30 +104,35 @@ contract DonationApp is Ownable {
             _deadline
         );
         causes[_id] = cause;
+        emit CauseAdded(_id, _name, _description, _image, _goal, _deadline, 0);
     }
 
     function donateToCause(
         uint256 _causeId,
         uint256 _amount,
         string calldata _message // optional
-    ) public payable amountGreaterThanZero(_amount) {
+    )
+        public
+        payable
+        whenAmountGreaterThanZero(_amount)
+        whenCauseExists(_causeId)
+    {
         Cause cause = causes[_causeId];
-        require(address(cause) != address(0), "Cause does not exist");
-        require(cause.paused() == false, "Donations are paused for this cause");
-        require(cause.expired() == false, "This cause has already expired");
-        require(_amount > msg.value, "Insufficient funds");
+        require(cause.paused() == false, "DonationApp: cause paused");
+        require(cause.expired() == false, "DonationApp: cause expired");
+        require(_amount > msg.value, "DonationApp: insufficient funds");
 
         _donationIds.increment();
         uint256 _id = _donationIds.current();
         Donation memory donation = Donation(
             _causeId,
+            msg.sender,
             _amount,
             _message,
-            payable(msg.sender),
             block.timestamp
         );
         donations[_id] = donation;
-        cause.addDonation(_amount);
+        cause.credit(_amount);
         totalDonations += _amount;
         if (donors[msg.sender] == 0) {
             donors[msg.sender] = _amount;
@@ -103,9 +142,9 @@ contract DonationApp is Ownable {
         }
         emit DonationMade(
             _causeId,
+            msg.sender,
             _amount,
             _message,
-            msg.sender,
             block.timestamp
         );
     }
@@ -114,7 +153,12 @@ contract DonationApp is Ownable {
         uint256 _causeId,
         uint256 _amount,
         string calldata _reason //required
-    ) public payable amountGreaterThanZero(_amount) onlyOwner {
+    )
+        public
+        payable
+        whenAmountGreaterThanZero(_amount)
+        whenCauseExists(_causeId)
+    {
         require(
             causes[_causeId].beneficiary() == msg.sender,
             "Only the beneficiary can withdraw donations"
@@ -128,9 +172,15 @@ contract DonationApp is Ownable {
             "Withdrawal reason cannot be empty"
         );
         Cause cause = causes[_causeId];
-        cause.deductDonation(_amount);
+        cause.debit(_amount);
         payable(msg.sender).transfer(_amount);
-        emit WithdrawalMade(_causeId, _amount, _reason, block.timestamp);
+        emit WithdrawalMade(
+            _causeId,
+            msg.sender,
+            _amount,
+            _reason,
+            block.timestamp
+        );
     }
 
     function getAllCauses() public view returns (Cause[] memory) {
@@ -139,5 +189,13 @@ contract DonationApp is Ownable {
             _causes[i - 1] = causes[i];
         }
         return _causes;
+    }
+
+    function causeCount() public view virtual returns (uint256) {
+        return _causeIds.current();
+    }
+
+    function donationCount() public view virtual returns (uint256) {
+        return _donationIds.current();
     }
 }
