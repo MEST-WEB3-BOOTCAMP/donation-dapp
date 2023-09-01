@@ -14,20 +14,6 @@ contract Cause is Pausable, Ownable {
     uint256 public deadline;
     uint256 public balance;
 
-    event CauseCreated(
-        uint256 indexed id,
-        string name,
-        string description,
-        string image,
-        uint256 goal,
-        uint256 deadline,
-        uint256 balance
-    );
-
-    event CausePaused(uint256 indexed causeId);
-
-    event CauseUnpaused(uint256 indexed causeId);
-
     constructor(
         uint256 _id,
         string memory _name,
@@ -37,6 +23,11 @@ contract Cause is Pausable, Ownable {
         uint256 _goal,
         uint256 _deadline
     ) {
+        require(
+            block.timestamp < _deadline,
+            "Cause: deadline must be in the future"
+        );
+
         id = _id;
         name = _name;
         description = _description;
@@ -45,36 +36,33 @@ contract Cause is Pausable, Ownable {
         deadline = _deadline;
         beneficiary = _beneficiary;
         balance = 0;
-        emit CauseCreated(
-            id,
-            name,
-            description,
-            image,
-            goal,
-            deadline,
-            balance
-        );
     }
 
-    function pause() public onlyOwner {
+    modifier whenNotExpired() {
+        require(expired() == false, "Cause: deadline has passed");
+        _;
+    }
+
+    function pause() external onlyOwner {
         _pause();
-        emit CausePaused(id);
     }
 
-    function unpause() public onlyOwner {
+    function unpause() external onlyOwner {
         _unpause();
-        emit CauseUnpaused(id);
     }
 
-    function expired() public view returns (bool) {
+    function expired() public view virtual onlyOwner returns (bool) {
         return block.timestamp > deadline;
     }
 
-    function addDonation(uint256 _amount) public onlyOwner {
+    function credit(
+        uint256 _amount
+    ) external onlyOwner whenNotPaused whenNotExpired {
         balance += _amount;
     }
 
-    function deductDonation(uint256 _amount) public onlyOwner {
+    function debit(uint256 _amount) external onlyOwner whenNotPaused {
+        require(balance >= _amount, "Cause: insufficient balance");
         balance -= _amount;
     }
 }
