@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "./libs/Causes.sol";
-import "./libs/Donations.sol";
-import "./libs/Withdrawals.sol";
+import "./Causes.sol";
+import "./Donations.sol";
+import "./Withdrawals.sol";
 
 contract DonationsManagement {
     using Causes for Causes.State;
