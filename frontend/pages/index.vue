@@ -1,64 +1,163 @@
 <template>
-  <!-- Coming soon page-->
-  <div class="misc-wrapper center">
+  <div class="">
 
-    <div class="p-2 p-sm-3">
-      <div class="w-100 text-center">
-        <div class="brand-logo d-flex justify-content-center align-items-center">
-          <svg viewBox="0 0 139 95" xmlns="http://www.w3.org/2000/svg"
-               xmlns:xlink="http://www.w3.org/1999/xlink" height="28">
-            <defs>
-              <lineargradient id="linearGradient-1" x1="100%" y1="10.5120544%" x2="50%" y2="89.4879456%">
-                <stop stop-color="#000000" offset="0%"></stop>
-                <stop stop-color="#FFFFFF" offset="100%"></stop>
-              </lineargradient>
-              <lineargradient id="linearGradient-2" x1="64.0437835%" y1="46.3276743%" x2="37.373316%"
-                              y2="100%">
-                <stop stop-color="#EEEEEE" stop-opacity="0" offset="0%"></stop>
-                <stop stop-color="#FFFFFF" offset="100%"></stop>
-              </lineargradient>
-            </defs>
-            <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-              <g id="Artboard" transform="translate(-400.000000, -178.000000)">
-                <g id="Group" transform="translate(400.000000, 178.000000)">
-                  <path class="text-primary" id="Path"
-                        d="M-5.68434189e-14,2.84217094e-14 L39.1816085,2.84217094e-14 L69.3453773,32.2519224 L101.428699,2.84217094e-14 L138.784583,2.84217094e-14 L138.784199,29.8015838 C137.958931,37.3510206 135.784352,42.5567762 132.260463,45.4188507 C128.736573,48.2809251 112.33867,64.5239941 83.0667527,94.1480575 L56.2750821,94.1480575 L6.71554594,44.4188507 C2.46876683,39.9813776 0.345377275,35.1089553 0.345377275,29.8015838 C0.345377275,24.4942122 0.230251516,14.560351 -5.68434189e-14,2.84217094e-14 Z"
-                        style="fill: currentColor"></path>
-                  <path id="Path1"
-                        d="M69.3453773,32.2519224 L101.428699,1.42108547e-14 L138.784583,1.42108547e-14 L138.784199,29.8015838 C137.958931,37.3510206 135.784352,42.5567762 132.260463,45.4188507 C128.736573,48.2809251 112.33867,64.5239941 83.0667527,94.1480575 L56.2750821,94.1480575 L32.8435758,70.5039241 L69.3453773,32.2519224 Z"
-                        fill="url(#linearGradient-1)" opacity="0.2"></path>
-                  <polygon id="Path-2" fill="#000000" opacity="0.049999997"
-                           points="69.3922914 32.4202615 32.8435758 70.5039241 54.0490008 16.1851325"></polygon>
-                  <polygon id="Path-21" fill="#000000" opacity="0.099999994"
-                           points="69.3922914 32.4202615 32.8435758 70.5039241 58.3683556 20.7402338"></polygon>
-                  <polygon id="Path-3" fill="url(#linearGradient-2)" opacity="0.099999994"
-                           points="101.428699 0 83.0667527 94.1480575 130.378721 47.0740288"></polygon>
-                </g>
-              </g>
-            </g>
-          </svg>
-          <h2 class="brand-text text-primary ml-1">Donation Dapp</h2>
+    <!-- Start -->
+    <section
+      class="py-36 md:h-screen h-auto items-center flex relative bg-[url('/assets/images/bg/bg4.html')] bg-bottom bg-cover"
+      id="home">
+      <div
+        class="absolute inset-0 -z-1 bg-gradient-to-b from-orange-600/20 dark:from-orange-600/40 via-orange-600/10 dark:via-orange-600/20 to-transparent"></div>
+      <div class="container relative">
+        <div class="grid md:grid-cols-12 grid-cols-1 items-center gap-[30px]">
+          <div class="lg:col-span-7 md:col-span-6 mt-14 md:mt-0">
+            <h4
+              class="lg:text-5xl text-4xl lg:leading-normal leading-normal font-medium mb-7 position-relative dark:text-white">
+              Give your users <br> privacy choices.</h4>
+
+            <p class="text-slate-400 dark:text-white/70 mb-0 max-w-2xl text-lg">Launch your campaign and benefit from
+              our
+              expertise on designing and managing conversion centered Tailwind CSS html page.</p>
+
+            <div class="subcribe-form mt-10">
+
+              <div class="relative mt-10">
+                <a href="#"
+                   class="btn bg-orange-600 hover:bg-orange-700 border-orange-600 hover:border-orange-700 text-white rounded-full me-1">Connect
+                  Wallet</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 md:col-span-6">
+            <div class="relative">
+              <div class="relative flex justify-end">
+                <img src="assets/images/ab01.jpg" class="lg:w-[400px] w-[280px] rounded-xl shadow dark:shadow-gray-700"
+                     alt="">
+                <div class="absolute top-0 translate-y-2/4 start-0 text-center">
+                  <a href="#!" data-type="youtube" data-id="yba7hPeTSjk"
+                     class="lightbox h-20 w-20 rounded-full shadow-lg shadow-slate-100 dark:shadow-slate-800 inline-flex items-center justify-center bg-white dark:bg-slate-900 text-orange-600">
+                    <i class="mdi mdi-play inline-flex items-center justify-center text-2xl"></i>
+                  </a>
+                </div>
+              </div>
+              <div class="absolute md:-start-5 start-0 -bottom-16">
+                <img src="assets/images/ab02.jpg"
+                     class="lg:w-[280px] w-[200px] border-8 border-white dark:border-slate-900 rounded-xl" alt="">
+              </div>
+            </div>
+          </div>
         </div>
+      </div><!--end container-->
+    </section><!--end section-->
+    <!-- End -->
 
-        <p class="mb-3">We're creating something awesome. Please connect your wallet to catch a glimpse
-          of our donation app!</p>
-        <form class="form-inline justify-content-center row m-0 mb-2" action="javascript:void(0);">
-          <button @click.prevent="goToDashboard" class="btn btn-outline-warning m-1  btn-sm-block" type="button">Home
-          </button>
-          <button v-if="!$store.state.wallet.wallet.connected" @click.prevent="connectWallet"
-                  class="btn btn-warning m-1 btn-sm-block"
-                  type="button">Connect Wallet
-          </button>
-        </form>
-        <img class="img-fluid" src="~assets/images/pages/coming-soon.svg"
-             alt="Coming soon page"/>
+    <!-- Start -->
+    <section class="relative md:py-24 py-16" id="how-it-works">
+      <div class="container md:mt-24 mt-16">
+        <div class="grid grid-cols-1 pb-8 text-center">
+          <h6 class="text-orange-600 text-base font-medium uppercase mb-2">Work Process</h6>
+          <h3 class="mb-4 md:text-2xl text-xl font-medium dark:text-white">Digital System For Our Business</h3>
+
+          <p class="text-slate-400 dark:text-slate-300 max-w-xl mx-auto">Launch your campaign and benefit from our
+            expertise on designing and managing conversion centered Tailwind CSS html page.</p>
+        </div><!--end grid-->
+
+        <div class="grid grid-cols-1 mt-8">
+          <div class="timeline relative">
+            <div class="timeline-item">
+              <div class="grid sm:grid-cols-2">
+                <div class="">
+                  <div class="duration date-label-left ltr:float-right rtl:float-left md:me-7 relative">
+                    <img src="assets/images/svg/design-thinking.svg" class="h-64 w-64" alt="">
+                  </div>
+                </div><!--end col-->
+                <div class="mt-4 md:mt-0">
+                  <div
+                    class="event event-description-right ltr:float-left rtl:float-right ltr:text-left rtl:text-right md:ms-7">
+                    <h5 class="text-lg dark:text-white mb-1 font-medium">Strategy</h5>
+                    <p class="timeline-subtitle mt-3 mb-0 text-slate-400">The generated injected humour, or
+                      non-characteristic words etc. Cum sociis natoque penatibus et magnis dis parturient montes,
+                      nascetur
+                      ridiculus mus. Donec quam felis,</p>
+                  </div>
+                </div><!--end col-->
+              </div><!--end grid-->
+            </div><!--end timeline item-->
+
+            <div class="timeline-item mt-5 pt-4">
+              <div class="grid sm:grid-cols-2">
+                <div class="md:order-1 order-2">
+                  <div
+                    class="event event-description-left ltr:float-left rtl:float-right ltr:text-right rtl:text-left md:me-7">
+                    <h5 class="text-lg dark:text-white mb-1 font-medium">Development</h5>
+                    <p class="timeline-subtitle mt-3 mb-0 text-slate-400">The generated injected humour, or
+                      non-characteristic words etc. Cum sociis natoque penatibus et magnis dis parturient montes,
+                      nascetur
+                      ridiculus mus. Donec quam felis,</p>
+                  </div>
+                </div><!--end col-->
+                <div class="md:order-2 order-1">
+                  <div class="duration duration-right md:ms-7 relative">
+                    <img src="assets/images/svg/coding.svg" class="h-64 w-64" alt="">
+                  </div>
+                </div><!--end col-->
+              </div><!--end grid-->
+            </div><!--end timeline item-->
+
+            <div class="timeline-item mt-5 pt-4">
+              <div class="grid sm:grid-cols-2">
+                <div class="mt-4 mt-sm-0">
+                  <div class="duration date-label-left ltr:float-right rtl:float-left md:me-7 relative">
+                    <img src="assets/images/svg/office-desk.svg" class="h-64 w-64" alt="">
+                  </div>
+                </div><!--end col-->
+                <div class="mt-4 mt-sm-0">
+                  <div
+                    class="event event-description-right ltr:float-left rtl:float-right ltr:text-left rtl:text-right md:ms-7">
+                    <h5 class="text-lg dark:text-white mb-1 font-medium">Launch</h5>
+                    <p class="timeline-subtitle mt-3 mb-0 text-slate-400">The generated injected humour, or
+                      non-characteristic words etc. Cum sociis natoque penatibus et magnis dis parturient montes,
+                      nascetur
+                      ridiculus mus. Donec quam felis,</p>
+                  </div>
+                </div><!--end col-->
+              </div><!--end grid-->
+            </div><!--end timeline item-->
+          </div>
+        </div>
       </div>
+    </section>
+    <!-- End -->
+
+    <!-- Back to top -->
+    <NuxtLink to="#" @click.native="toTopFunction"
+              class="back-to-top fixed text-lg rounded-full z-10 bottom-5 end-5 h-9 w-9 text-center bg-orange-600 text-white leading-9">
+      <i
+        class="uil uil-arrow-up"></i>
+    </NuxtLink>
+    <!-- Back to top -->
+
+    <!-- Switcher -->
+    <div class="fixed top-1/4 -right-2 z-3">
+            <span class="relative inline-block rotate-90">
+                <input type="checkbox" class="checkbox opacity-0 absolute" id="chk"/>
+                <label
+                  class="label bg-slate-900 dark:bg-white shadow dark:shadow-gray-800 cursor-pointer rounded-full flex justify-between items-center p-1 w-14 h-8"
+                  for="chk">
+                    <i class="uil uil-moon text-[20px] text-yellow-500"></i>
+                    <i class="uil uil-sun text-[20px] text-yellow-500"></i>
+                    <span
+                      class="ball bg-white dark:bg-slate-900 rounded-full absolute top-[2px] left-[2px] w-7 h-7"></span>
+                </label>
+            </span>
     </div>
+    <!-- Switcher -->
   </div>
-  <!-- / Coming soon page-->
 </template>
 
 <script>
+import {setPageName, setToast} from "~/plugins/helpers";
+
 export default {
   name: 'IndexPage',
   computed: {
@@ -66,10 +165,19 @@ export default {
       return this.$store.getters['wallet/walletAddress'];
     },
     walletIsConnected() {
-      if (this.$store.getters['wallet/getConnectedWallet'].wallet) return this.$store.getters['wallet/isWalletConnected'];
+      if (this.$store.getters['wallet/getConnectedWallet'].wallet)
+        return this.$store.getters['wallet/isWalletConnected'];
     },
   },
+  mounted() {
+    setToast(this, '', '', '')
+    setPageName(this, 'home')
+  },
   methods: {
+    toTopFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    },
     async connectWallet() {
       try {
         const wallet = await this.$store.dispatch('wallet/connectWallet');
@@ -79,9 +187,18 @@ export default {
       }
 
     },
+    async disconnectWallet() {
+      try {
+        const status = await this.$store.dispatch('wallet/disconnectWallet');
+        console.log('Disconnected wallet with address:', status);
+      } catch (error) {
+        console.error('Error connecting to wallet:', error.message);
+      }
+
+    },
 
     goToDashboard() {
-      this.$router.push('/dashboard')
+      return this.$router.push('/dashboard')
     }
   },
 }

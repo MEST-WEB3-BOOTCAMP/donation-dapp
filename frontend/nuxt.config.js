@@ -1,7 +1,7 @@
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'frontend',
+    title: 'Donation Dapp',
     htmlAttrs: {
       lang: 'en'
     },
@@ -17,28 +17,39 @@ export default {
         rel: 'stylesheet',
         href: 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600'
       }
+    ],
+    script: [
+      {
+        src: '/assets/libs/jquery/jquery.min.js',
+        type: 'text/javascript',
+        body: true,
+        async: true
+      },
     ]
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
-    // '~/assets/vendors/css/vendors.min.css',
-    '~/assets/css/bootstrap.min.css',
-    '~/assets/css/bootstrap-extended.min.css',
-    '~/assets/css/colors.min.css',
-    '~/assets/css/components.min.css',
-    '~/assets/css/themes/dark-layout.min.css',
-    '~/assets/css/themes/semi-dark-layout.min.css',
-    '~/assets/css/core/menu/menu-types/horizontal-menu.min.css',
-    '~/assets/css/pages/page-misc.min.css'
-    // '~/assets/css/style.css'
+    'assets/libs/tobii/css/tobii.min.css',
+    'assets/libs/tiny-slider/tiny-slider.css',
+    'assets/libs/iconscout/unicons/css/line.css',
+    'assets/css/icons.css',
+    '~/assets/css/style.css',
+    'assets/css/tailwind.css'
+
+    // <script src="assets/libs/gumshoejs/gumshoe.polyfills.min.js"></script>
+    // <script src="assets/libs/tobii/js/tobii.min.js"></script>
+    // <script src="assets/libs/tiny-slider/min/tiny-slider.js"></script>
+    // <script src="assets/libs/feather-icons/feather.min.js"></script>
+    // <script src="assets/js/plugins.init.js"></script>
+    // <script src="assets/js/app.js"></script>
+
   ],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
-    {src: '~/plugins/contract.js', mode: 'all'},
-    {src: '~/plugins/helpers.js', mode: 'all'},
-    // {src: '~/plugins/contract-abi.js', mode: 'all'}
+    {src: '~/plugins/contract.js'},
+    {src: '~/plugins/helpers.js'}
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -47,7 +58,7 @@ export default {
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
   buildModules: [
     // https://go.nuxtjs.dev/tailwindcss
-    '@nuxtjs/tailwindcss',
+    // '@nuxtjs/tailwindcss'
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
