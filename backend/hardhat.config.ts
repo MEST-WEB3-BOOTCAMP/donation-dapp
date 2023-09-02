@@ -1,10 +1,15 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const { PRIVATE_KEY = "" } = process.env;
+const {
+  PRIVATE_KEY = "",
+  NETWORK_URL = "https://rpc-mumbai.maticvigil.com",
+  POLYGONSCAN_API_KEY,
+} = process.env;
 
 const config: HardhatUserConfig = {
   solidity: "0.8.19",
@@ -17,10 +22,13 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 1337,
     },
-    mumbai: {
-      url: "https://rpc-mumbai.maticvigil.com",
+    polygonMumbai: {
+      url: NETWORK_URL,
       accounts: [PRIVATE_KEY],
     },
+  },
+  etherscan: {
+    apiKey: POLYGONSCAN_API_KEY,
   },
 };
 
