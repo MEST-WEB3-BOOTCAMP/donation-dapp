@@ -10,7 +10,7 @@ library Causes {
     struct Cause {
         uint id;
         string title;
-        address payable beneficiary;
+        address beneficiary;
         uint balance;
         bool paused;
         uint timestamp;
@@ -18,13 +18,13 @@ library Causes {
 
     function add(
         State storage state,
-        string memory _title
+        string calldata _title
     ) internal returns (uint) {
         state.id++;
         state.causes[state.id] = Cause(
             state.id,
             _title,
-            payable(msg.sender),
+            msg.sender,
             0,
             false,
             block.timestamp
@@ -40,7 +40,7 @@ library Causes {
     function all(State storage state) internal view returns (Cause[] memory) {
         Cause[] memory _causes = new Cause[](state.id);
         for (uint i = 0; i < state.id; i++) {
-            _causes[i] = state.causes[i];
+            _causes[i] = state.causes[i + 1];
         }
         return _causes;
     }
@@ -76,7 +76,7 @@ library Causes {
         state.causes[_causeId].beneficiary = payable(_beneficiary);
     }
 
-    function donateToCause(
+    function increaseBalance(
         State storage state,
         uint _causeId,
         uint _amount
@@ -84,7 +84,7 @@ library Causes {
         state.causes[_causeId].balance += _amount;
     }
 
-    function withdrawFromCause(
+    function decreaseBalance(
         State storage state,
         uint _causeId,
         uint _amount

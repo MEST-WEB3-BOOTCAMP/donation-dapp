@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 library Donations {
     struct State {
-        uint total;
+        uint _total;
         uint id;
         mapping(uint => Donation[]) donations;
         mapping(uint => uint) causeTotal;
@@ -28,7 +28,7 @@ library Donations {
         if (bytes(_message).length == 0) {
             _message = "Anonymous donation";
         }
-        state.total += _amount;
+        state._total += _amount;
         state.causeTotal[_causeId] += _amount;
         state.id++;
         state.donations[_causeId].push(
@@ -49,5 +49,16 @@ library Donations {
         uint _causeId
     ) internal view returns (Donation[] memory) {
         return state.donations[_causeId];
+    }
+
+    function total(State storage state) internal view returns (uint) {
+        return state._total;
+    }
+
+    function getTotal(
+        State storage state,
+        uint _causeId
+    ) internal view returns (uint) {
+        return state.causeTotal[_causeId];
     }
 }
