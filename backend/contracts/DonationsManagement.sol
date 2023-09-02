@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libs/Causes.sol";
 import "./libs/Donations.sol";
 import "./libs/Withdrawals.sol";
 
-contract DonationsManagement is Ownable {
+contract DonationsManagement {
     using Causes for Causes.State;
     using Donations for Donations.State;
     using Withdrawals for Withdrawals.State;
@@ -14,7 +13,7 @@ contract DonationsManagement is Ownable {
     Donations.State private _donations;
     Withdrawals.State private _withdrawals;
 
-    uint public totalDonations;
+    address public owner;
 
     event CauseAdded(
         uint indexed id,
@@ -53,6 +52,15 @@ contract DonationsManagement is Ownable {
         _;
     }
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Caller is not the owner");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
     function createCause(string calldata _title) external {
         uint _id = _causes.add(_title);
         emit CauseAdded(_id, _title, msg.sender, 0, block.timestamp);
@@ -78,7 +86,7 @@ contract DonationsManagement is Ownable {
         );
         require(
             _beneficiary != _causes.get(_causeId).beneficiary,
-            "Beneficiary address cannot be the same"
+            "Beneficiary is the same"
         );
         _causes.updateBeneficiary(_causeId, _beneficiary);
         emit CauseBeneficiaryUpdated(_causeId, _beneficiary);
@@ -90,9 +98,9 @@ contract DonationsManagement is Ownable {
     ) external payable causeNotPaused(_causeId) {
         require(msg.value > 0, "Donation amount should be greater than 0");
 
-        totalDonations += msg.value;
-        _causes.donateToCause(_causeId, msg.value);
+        _causes.increaseBalance(_causeId, msg.value);
         _donations.add(_causeId, msg.sender, msg.value, _message);
+
         emit DonationMade(
             _donations.id,
             _causeId,
@@ -122,7 +130,7 @@ contract DonationsManagement is Ownable {
             "Withdrawal reason cannot be empty"
         );
 
-        _causes.withdrawFromCause(_causeId, _amount);
+        _causes.decreaseBalance(_causeId, _amount);
         uint _id = _withdrawals.add(_causeId, msg.sender, _amount, _message);
 
         payable(msg.sender).transfer(_amount);
@@ -161,5 +169,13 @@ contract DonationsManagement is Ownable {
 
     function getBalance() external view returns (uint) {
         return address(this).balance;
+    }
+
+    function totalDonationsByCause(uint _causeId) external view returns (uint) {
+        return _donations.getTotal(_causeId);
+    }
+
+    function totalDonations() external view returns (uint) {
+        return _donations.total();
     }
 }

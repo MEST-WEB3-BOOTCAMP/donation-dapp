@@ -88,7 +88,7 @@ describe("DonationsManagement", function () {
 
           await expect(
             donationsMgt.connect(otherAccount).pauseCause(1)
-          ).to.be.revertedWith("Ownable: caller is not the owner");
+          ).to.be.revertedWith("Caller is not the owner");
         });
       });
 
@@ -150,7 +150,7 @@ describe("DonationsManagement", function () {
 
           await expect(
             donationsMgt.connect(otherAccount).unPauseCause(1)
-          ).to.be.revertedWith("Ownable: caller is not the owner");
+          ).to.be.revertedWith("Caller is not the owner");
         });
       });
 
@@ -209,7 +209,42 @@ describe("DonationsManagement", function () {
             donationsMgt
               .connect(otherAccount)
               .updateCauseBeneficiary(1, otherAccount.address)
-          ).to.be.revertedWith("Ownable: caller is not the owner");
+          ).to.be.revertedWith("Caller is not the owner");
+        });
+
+        it("should revert if beneficiary is the same", async function () {
+          const { donationsMgt, owner } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+
+          await donationsMgt.createCause("Cause 1");
+
+          await expect(
+            donationsMgt.updateCauseBeneficiary(1, owner.address)
+          ).to.be.revertedWith("Beneficiary is the same");
+        });
+
+        it("should revert if cause is paused", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+
+          await donationsMgt.connect(otherAccount).createCause("Cause 1");
+          await donationsMgt.pauseCause(1);
+
+          await expect(
+            donationsMgt.updateCauseBeneficiary(1, otherAccount.address)
+          ).to.be.revertedWith("Cause paused");
+        });
+
+        it("should revert if beneficiary is ZeroAddress", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+
+          await donationsMgt.createCause("Cause 1");
+
+          await expect(
+            donationsMgt.updateCauseBeneficiary(1, ethers.ZeroAddress)
+          ).to.be.revertedWith("Beneficiary address cannot be 0x0");
         });
       });
 
@@ -489,6 +524,14 @@ describe("DonationsManagement", function () {
 
           expect(causes.length).to.equal(3);
         });
+
+        it("should return empty array if no causes", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+
+          const causes = await donationsMgt.getAllCauses();
+
+          expect(causes.length).to.equal(0);
+        });
       });
     });
 
@@ -578,6 +621,68 @@ describe("DonationsManagement", function () {
           const withdrawals = await donationsMgt.getWithdrawals(100);
 
           expect(withdrawals.length).to.equal(0);
+        });
+      });
+    });
+
+    describe("totalDonations", function () {
+      describe("Actions", function () {
+        it("should get total donations", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+
+          await donationsMgt.createCause("Cause 1");
+          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
+            value: ethers.parseEther("0.01"),
+          });
+          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
+            value: ethers.parseEther("0.02"),
+          });
+          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
+            value: ethers.parseEther("0.03"),
+          });
+
+          expect(await donationsMgt.totalDonations()).to.equal(
+            ethers.parseEther("0.06")
+          );
+        });
+
+        it("should return 0 if no donations", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+
+          expect(await donationsMgt.totalDonations()).to.equal(0);
+        });
+      });
+    });
+
+    describe("totalDonationsByCause", function () {
+      describe("Actions", function () {
+        it("should get total donations for a specific cause", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+
+          await donationsMgt.createCause("Cause 1");
+          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
+            value: ethers.parseEther("0.01"),
+          });
+          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
+            value: ethers.parseEther("0.02"),
+          });
+          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
+            value: ethers.parseEther("0.03"),
+          });
+
+          expect(await donationsMgt.totalDonationsByCause(1)).to.equal(
+            ethers.parseEther("0.06")
+          );
+        });
+
+        it("should return 0 if cause does not exist or no donations", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+
+          expect(await donationsMgt.totalDonationsByCause(100)).to.equal(0);
         });
       });
     });

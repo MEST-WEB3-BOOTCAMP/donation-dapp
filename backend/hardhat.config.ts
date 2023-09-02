@@ -1,5 +1,10 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+const { PRIVATE_KEY = "" } = process.env;
 
 const config: HardhatUserConfig = {
   solidity: "0.8.19",
@@ -14,11 +19,7 @@ const config: HardhatUserConfig = {
     },
     mumbai: {
       url: "https://rpc-mumbai.maticvigil.com",
-      accounts: [],
-    },
-    matic: {
-      url: "https://rpc-mainnet.maticvigil.com",
-      accounts: [],
+      accounts: [PRIVATE_KEY],
     },
   },
 };
