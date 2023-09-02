@@ -1,197 +1,165 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Cause.sol";
+import "./libs/Causes.sol";
+import "./libs/Donations.sol";
+import "./libs/Withdrawals.sol";
 
 contract DonationsManagement is Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private _donationIds;
-    Counters.Counter private _causeIds;
+    using Causes for Causes.State;
+    using Donations for Donations.State;
+    using Withdrawals for Withdrawals.State;
+    Causes.State private _causes;
+    Donations.State private _donations;
+    Withdrawals.State private _withdrawals;
 
-    struct Donation {
-        uint256 causeId;
-        address donor;
-        uint256 amount;
-        string message;
-        uint256 date;
-    }
-
-    struct Withdrawal {
-        uint256 causeId;
-        address beneficiary;
-        uint256 amount;
-        string reason;
-        uint256 date;
-    }
+    uint public totalDonations;
 
     event CauseAdded(
-        uint256 indexed id,
-        string name,
-        string description,
-        string image,
-        uint256 goal,
-        uint256 deadline,
-        uint256 balance
+        uint indexed id,
+        string title,
+        address indexed beneficiary,
+        uint balance,
+        uint timestamp
     );
 
-    event CausePaused(uint256 indexed causeId);
+    event CausePaused(uint indexed causeId);
 
-    event CauseUnPaused(uint256 indexed causeId);
+    event CauseUnPaused(uint indexed causeId);
 
-    event CauseUpdated(
-        uint256 indexed causeId,
-        string name,
-        string description,
-        string image,
-        uint256 goal,
-        uint256 deadline,
-        uint256 balance
-    );
+    event CauseBeneficiaryUpdated(uint indexed causeId, address beneficiary);
 
     event DonationMade(
-        uint256 indexed causeId,
+        uint indexed donationId,
+        uint indexed causeId,
         address indexed donor,
-        uint256 amount,
+        uint amount,
         string message,
-        uint256 date
+        uint timestamp
     );
 
     event WithdrawalMade(
-        uint256 indexed causeId,
+        uint indexed withdrawalId,
+        uint indexed causeId,
         address indexed beneficiary,
-        uint256 amount,
+        uint amount,
         string reason,
-        uint256 date
+        uint timestamp
     );
 
-    mapping(uint256 => Donation) public donations;
-    mapping(uint256 => Cause) public causes;
-    mapping(address => uint256) donors;
-    uint256 public totalDonations;
-
-    modifier whenAmountGreaterThanZero(uint256 _amount) {
-        require(_amount > 0, "Amount must be greater than 0");
+    modifier causeNotPaused(uint _causeId) {
+        require(!_causes.isPaused(_causeId), "Cause paused");
         _;
     }
 
-    modifier whenCauseExists(uint256 _causeId) {
-        require(address(causes[_causeId]) != address(0), "DonationApp: cause does not exist");
-        _;
+    function createCause(string calldata _title) external {
+        uint _id = _causes.add(_title);
+        emit CauseAdded(_id, _title, msg.sender, 0, block.timestamp);
     }
 
-    function addCause(
-        string memory _name,
-        string memory _description,
-        string memory _image,
-        uint256 _goal,
-        uint256 _deadline
-    ) external {
-        _causeIds.increment();
-        uint256 _id = _causeIds.current();
-        Cause cause = new Cause(
-            _id,
-            _name,
-            _description,
-            _image,
-            msg.sender,
-            _goal,
-            _deadline
+    function pauseCause(uint _causeId) external onlyOwner {
+        _causes.pause(_causeId);
+        emit CausePaused(_causeId);
+    }
+
+    function unPauseCause(uint _causeId) external onlyOwner {
+        _causes.unPause(_causeId);
+        emit CauseUnPaused(_causeId);
+    }
+
+    function updateCauseBeneficiary(
+        uint _causeId,
+        address payable _beneficiary
+    ) external onlyOwner causeNotPaused(_causeId) {
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address cannot be 0x0"
         );
-        causes[_id] = cause;
-
-        emit CauseAdded(_id, _name, _description, _image, _goal, _deadline, 0);
+        require(
+            _beneficiary != _causes.get(_causeId).beneficiary,
+            "Beneficiary address cannot be the same"
+        );
+        _causes.updateBeneficiary(_causeId, _beneficiary);
+        emit CauseBeneficiaryUpdated(_causeId, _beneficiary);
     }
 
     function donateToCause(
-        uint256 _causeId,
-        uint256 _amount,
-        string memory _message // optional
-    )
-        external
-        payable
-        whenAmountGreaterThanZero(_amount)
-        whenCauseExists(_causeId)
-    {
-        Cause cause = causes[_causeId];
-        require(cause.paused() == false, "DonationsManagement: cause paused");
-        require(cause.expired() == false, "DonationsManagement: cause expired");
-        require(_amount > msg.value, "DonationsManagement: insufficient funds");
+        uint _causeId,
+        string calldata _message
+    ) external payable causeNotPaused(_causeId) {
+        require(msg.value > 0, "Donation amount should be greater than 0");
 
-        if (keccak256(abi.encode(_message)) == keccak256("")) {
-            _message = "No message";
-        }
-
-        payable(address(this)).transfer(_amount);
-        _donationIds.increment();
-        uint256 _id = _donationIds.current();
-        Donation memory donation = Donation(
-            _causeId,
-            msg.sender,
-            _amount,
-            _message,
-            block.timestamp
-        );
-        donations[_id] = donation;
-        cause.credit(_amount);
-        totalDonations += _amount;
-        donors[msg.sender] += _amount;
+        totalDonations += msg.value;
+        _causes.donateToCause(_causeId, msg.value);
+        _donations.add(_causeId, msg.sender, msg.value, _message);
         emit DonationMade(
+            _donations.id,
             _causeId,
             msg.sender,
-            _amount,
+            msg.value,
             _message,
             block.timestamp
         );
     }
 
     function withdrawFromCause(
-        uint256 _causeId,
-        uint256 _amount,
-        string calldata _reason //required
-    )
-        external
-        payable
-        whenAmountGreaterThanZero(_amount)
-        whenCauseExists(_causeId)
-    {
+        uint _causeId,
+        uint _amount,
+        string calldata _message
+    ) external payable causeNotPaused(_causeId) {
         require(
-            causes[_causeId].beneficiary() == msg.sender, "Only beneficiary can withdraw donations"
+            _causes.get(_causeId).beneficiary == msg.sender,
+            "Only the beneficiary can withdraw from the cause"
+        );
+        require(_amount > 0, "Withdrawal amount should be greater than 0");
+        require(
+            _amount <= _causes.get(_causeId).balance,
+            "Withdrawal amount should be less than or equal to the cause balance"
         );
         require(
-            causes[_causeId].balance() >= _amount, "Withdrawal amount must be less than or equal to total donations"
-        );
-        require(
-            keccak256(abi.encode(_reason)) != keccak256(""), "Withdrawal reason cannot be empty"
+            bytes(_message).length > 0,
+            "Withdrawal reason cannot be empty"
         );
 
-        Cause cause = causes[_causeId];
-        cause.debit(_amount);
+        _causes.withdrawFromCause(_causeId, _amount);
+        uint _id = _withdrawals.add(_causeId, msg.sender, _amount, _message);
+
         payable(msg.sender).transfer(_amount);
 
         emit WithdrawalMade(
+            _id,
             _causeId,
             msg.sender,
             _amount,
-            _reason,
+            _message,
             block.timestamp
         );
     }
 
-    function getAllCauses() external view returns (Cause[] memory) {
-        Cause[] memory _causes = new Cause[](_causeIds.current());
-        for (uint256 i = 1; i <= _causeIds.current(); i++) {
-            _causes[i - 1] = causes[i];
-        }
-        return _causes;
+    function getAllCauses() external view returns (Causes.Cause[] memory) {
+        return _causes.all();
     }
 
-    function causeCount() external view virtual returns (uint256) {
-        return _causeIds.current();
+    function getCause(
+        uint _causeId
+    ) external view returns (Causes.Cause memory) {
+        return _causes.get(_causeId);
     }
 
-    function donationCount() external view virtual returns (uint256) {
-        return _donationIds.current();
+    function getDonations(
+        uint _causeId
+    ) external view returns (Donations.Donation[] memory) {
+        return _donations.get(_causeId);
+    }
+
+    function getWithdrawals(
+        uint _causeId
+    ) external view returns (Withdrawals.Withdrawal[] memory) {
+        return _withdrawals.get(_causeId);
+    }
+
+    function getBalance() external view returns (uint) {
+        return address(this).balance;
     }
 }
