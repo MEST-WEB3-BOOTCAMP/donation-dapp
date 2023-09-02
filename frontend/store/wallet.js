@@ -24,18 +24,48 @@ export const actions = {
         const accounts = await window.ethereum.request({method: 'eth_accounts'});
         const wallet = {
           address: accounts[0],
-          connected: true
+          connected: true,
+          balance: 0
         };
 
         // Update store state with wallet details
-        commit('setWallet', wallet);
+        // if (wallet) {
+        //   const address = await wallet.getAddress();
+        //   const balance = await wallet.provider.getBalance(address);
+        //   wallet.balance = ethers.utils.formatEther(balance);
+        // }
 
+        console.log(wallet)
+
+        commit('setWallet', wallet);
         return wallet;
       } else {
         return new Error('MetaMask is not installed or not available.');
       }
     } catch (error) {
       console.error('Wallet connection error:', error);
+      throw error;
+    }
+  },
+
+  async disconnectWallet({commit}) {
+    try {
+      // Reset wallet state
+      const accounts = await window.ethereum.request({
+        method: "wallet_requestPermissions",
+        params: [{
+          eth_accounts: {}
+        }]
+      }).then(() => ethereum.request({
+        method: 'eth_requestAccounts'
+      }))
+      commit('setWallet', accounts[0]);
+      console.log('Wallet disconnected.');
+
+      return  accounts[0]
+
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error.message);
       throw error;
     }
   },

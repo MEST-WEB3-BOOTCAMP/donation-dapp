@@ -11,9 +11,9 @@ export const getData = (name) => {
 export const putData = (name, data) => localStorage.setItem(name, JSON.stringify(data))
 export const clearLocalStorage = () => localStorage.clear()
 
-export const setPageName = (ref, name = 'origgin') => ref.$store.commit('common/setMenu', name)
+export const setPageName = (context, name = '') => context.$store.commit('common/setMenu', name)
 
-export const setToast = (ref, type, title, message) => ref.$store.commit('toast/setToast', {
+export const setToast = (ref, type, title, message) => ref.$store.commit('common/setToast', {
   type: type, title: title ?? type, message: message,
 })
 
