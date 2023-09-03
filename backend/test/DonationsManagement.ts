@@ -417,9 +417,7 @@ describe("DonationsManagement", function () {
         });
 
         it("should revert if donation amount is 0", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await donationsMgt.createCampaign("Campaign 1");
           await expect(
             donationsMgt.donateToCampaign(1, "", {
@@ -431,9 +429,7 @@ describe("DonationsManagement", function () {
 
       describe("Functionality", function () {
         it("should increase total donations", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await donationsMgt.createCampaign("Campaign 1");
           const totalDonations = await donationsMgt.getCampaignTotalDonations(
             1
@@ -447,9 +443,7 @@ describe("DonationsManagement", function () {
         });
 
         it("should increase campaign balance", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await donationsMgt.createCampaign("Campaign 1");
 
           await donationsMgt.donateToCampaign(1, "", {
@@ -460,9 +454,7 @@ describe("DonationsManagement", function () {
         });
 
         it("should add donation to campaign donations", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
 
           await donationsMgt.createCampaign("Campaign 1");
 
@@ -476,9 +468,7 @@ describe("DonationsManagement", function () {
         });
 
         it("should add donation to campaign donations with message", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
 
           await donationsMgt.createCampaign("Campaign 1");
 
@@ -495,9 +485,7 @@ describe("DonationsManagement", function () {
         });
 
         it("should add donation with empty message with default message", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
 
           await donationsMgt.createCampaign("Campaign 1");
 
@@ -530,34 +518,28 @@ describe("DonationsManagement", function () {
           await expect(
             donationsMgt
               .connect(otherAccount)
-              .withdrawFromCampaign(1, otherAccount.address, 100)
+              .withdrawFromCampaign(1, 100, "Test")
           ).to.be.revertedWith("Only beneficiary can withdraw");
         });
 
         it("should revert if campaign does not exist", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await expect(
-            donationsMgt.withdrawFromCampaign(1, otherAccount.address, 100)
+            donationsMgt.withdrawFromCampaign(1, 100, "Test")
           ).to.be.revertedWith("Campaign does not exist");
         });
 
         it("should revert if campaign is not active", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await donationsMgt.createCampaign("Campaign 1");
           await donationsMgt.deactivateCampaign(1);
           await expect(
-            donationsMgt.withdrawFromCampaign(1, otherAccount.address, 100)
+            donationsMgt.withdrawFromCampaign(1, 100, "Test")
           ).to.be.revertedWith("Campaign is not active");
         });
 
         it("should revert if withdrawal amount is 0", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await donationsMgt.createCampaign("Campaign 1");
 
           await expect(
@@ -566,9 +548,7 @@ describe("DonationsManagement", function () {
         });
 
         it("should revert if withdrawal amount is more than available balance", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await donationsMgt.createCampaign("Campaign 1");
 
           await donationsMgt.donateToCampaign(1, "", {
@@ -576,16 +556,14 @@ describe("DonationsManagement", function () {
           });
 
           await expect(
-            donationsMgt.withdrawFromCampaign(1, otherAccount.address, 200)
+            donationsMgt.withdrawFromCampaign(1, 1000, "Test")
           ).to.be.revertedWith(
             "Withdrawal amount is more than available balance"
           );
         });
 
         it("should revert if withdrawal reason is empty", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await donationsMgt.createCampaign("Campaign 1");
 
           await donationsMgt.donateToCampaign(1, "", {
@@ -600,9 +578,7 @@ describe("DonationsManagement", function () {
 
       describe("Functionality", function () {
         it("should decrease campaign balance", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
 
           await donationsMgt.createCampaign("Campaign 1");
 
