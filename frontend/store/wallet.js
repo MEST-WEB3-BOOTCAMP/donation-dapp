@@ -7,7 +7,7 @@ export const state = () => ({
 export const mutations = {
   setWallet(state, data) {
     state.wallet = data;
-    putData('wallet', state.wallet)
+    putData('wallet', data)
   },
 };
 
@@ -51,19 +51,19 @@ export const actions = {
   async disconnectWallet({commit}) {
     try {
       // Reset wallet state
-      const accounts = await window.ethereum.request({
+      console.log("disconnecting...")
+      return await window.ethereum.request({
         method: "wallet_requestPermissions",
         params: [{
           eth_accounts: {}
         }]
-      }).then(() => ethereum.request({
-        method: 'eth_requestAccounts'
-      }))
-      commit('setWallet', accounts[0]);
-      console.log('Wallet disconnected.');
+      }).then(() => {
+        window.ethereum.request({
+          method: 'eth_requestAccounts'
+        })
 
-      return  accounts[0]
-
+        commit('setWallet', {});
+      })
     } catch (error) {
       console.error('Error disconnecting wallet:', error.message);
       throw error;
@@ -75,4 +75,5 @@ export const actions = {
 export const getters = {
   getConnectedWallet: (state) => state.wallet,
   isWalletConnected: (state) => state.wallet.connected ?? false,
+  getWalletAddress: (state) => state.wallet.address ?? "",
 };

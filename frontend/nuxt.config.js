@@ -24,18 +24,18 @@ export default {
         type: 'text/javascript',
         body: true,
         async: true
-      },
+      }
     ]
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
+    'assets/css/tailwind.css',
     'assets/libs/tobii/css/tobii.min.css',
     'assets/libs/tiny-slider/tiny-slider.css',
     'assets/libs/iconscout/unicons/css/line.css',
     'assets/css/icons.css',
-    '~/assets/css/style.css',
-    'assets/css/tailwind.css'
+    '~/assets/css/style.css'
 
     // <script src="assets/libs/gumshoejs/gumshoe.polyfills.min.js"></script>
     // <script src="assets/libs/tobii/js/tobii.min.js"></script>
