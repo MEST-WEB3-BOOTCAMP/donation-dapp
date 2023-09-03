@@ -235,7 +235,7 @@ contract DonationsManagement {
         uint _campaignId,
         uint _amount,
         string calldata _message
-    ) external payable campaignExists(_campaignId) activeCampaign(_campaignId) {
+    ) external campaignExists(_campaignId) activeCampaign(_campaignId) {
         require(
             campaigns[_campaignId].beneficiary == msg.sender,
             "Only beneficiary can withdraw"
@@ -261,7 +261,7 @@ contract DonationsManagement {
                 block.timestamp
             )
         );
-        payable(msg.sender).transfer(_amount);
+        payable(campaigns[_campaignId].beneficiary).transfer(_amount);
         emit WithdrawalMade(
             withdrawalId,
             _campaignId,
