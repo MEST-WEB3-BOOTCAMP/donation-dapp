@@ -23,666 +23,639 @@ describe("DonationsManagement", function () {
       const { donationsMgt, owner, otherAccount } = await loadFixture(
         deployDonationsMgtFixture
       );
-
       expect(await donationsMgt.owner()).to.equal(owner.address);
       expect(await donationsMgt.owner()).to.not.equal(otherAccount.address);
     });
   });
 
   describe("Methods", function () {
-    describe("createCause", function () {
-      describe("Actions", function () {
-        it("should create a new cause", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          const causes = await donationsMgt.getAllCauses();
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-          const causesAfter = await donationsMgt.getAllCauses();
-
-          expect(causes.length).to.equal(0);
-          expect(causesAfter.length).to.equal(1);
-        });
-
-        it('should emit "CauseAdded" event', async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await expect(
-            donationsMgt.connect(otherAccount).createCause("Cause 1")
-          ).to.emit(donationsMgt, "CauseAdded");
-        });
-      });
-    });
-
-    describe("pauseCause", function () {
+    describe("createCampaign", function () {
       describe("Validations", function () {
-        it("should revert if cause is already paused", async function () {
+        it("should revert if campaign title is empty", async function () {
           const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await donationsMgt.createCause("Cause 1");
-          await donationsMgt.pauseCause(1);
-
-          await expect(donationsMgt.pauseCause(1)).to.be.revertedWith(
-            "Cause is already paused"
+          await expect(donationsMgt.createCampaign("")).to.be.revertedWith(
+            "Campaign title cannot be empty"
           );
-        });
-
-        it("should revert if cause does not exist", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await expect(donationsMgt.pauseCause(100)).to.be.revertedWith(
-            "Cause does not exist"
-          );
-        });
-
-        it("should revert if caller is not owner", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.createCause("Cause 1");
-
-          await expect(
-            donationsMgt.connect(otherAccount).pauseCause(1)
-          ).to.be.revertedWith("Caller is not the owner");
         });
       });
 
-      describe("Actions", function () {
-        it("should pause a cause", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-
-          const cause = await donationsMgt.getCause(1);
-          await donationsMgt.pauseCause(1);
-          const causeAfter = await donationsMgt.getCause(1);
-
-          expect(cause.paused).to.equal(false);
-          expect(causeAfter.paused).to.equal(true);
-        });
-
-        it('should emit "CausePaused" event', async function () {
+      describe("Functionality", function () {
+        it("should create a campaign", async function () {
           const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await donationsMgt.createCause("Cause 1");
-
-          await expect(donationsMgt.pauseCause(1))
-            .to.emit(donationsMgt, "CausePaused")
-            .withArgs(1);
+          await donationsMgt.createCampaign("Campaign 1");
+          expect((await donationsMgt.getCampaign(1)).title).to.equal(
+            "Campaign 1"
+          );
         });
       });
-    });
-
-    describe("unPauseCause", function () {
-      describe("Validations", function () {
-        it("should revert if cause is not paused", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await donationsMgt.createCause("Cause 1");
-
-          await expect(donationsMgt.unPauseCause(1)).to.be.revertedWith(
-            "Cause is not paused"
-          );
-        });
-
-        it("should revert if cause does not exist", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await expect(donationsMgt.unPauseCause(100)).to.be.revertedWith(
-            "Cause does not exist"
-          );
-        });
-
-        it("should revert if caller is not owner", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.createCause("Cause 1");
-          await donationsMgt.pauseCause(1);
-
-          await expect(
-            donationsMgt.connect(otherAccount).unPauseCause(1)
-          ).to.be.revertedWith("Caller is not the owner");
-        });
-      });
-
-      describe("Actions", function () {
-        it("should unpause a cause", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-          await donationsMgt.pauseCause(1);
-
-          const cause = await donationsMgt.getCause(1);
-          await donationsMgt.unPauseCause(1);
-          const causeAfter = await donationsMgt.getCause(1);
-
-          expect(cause.paused).to.equal(true);
-          expect(causeAfter.paused).to.equal(false);
-        });
-
-        it('should emit "CauseUnPaused" event', async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-          await donationsMgt.pauseCause(1);
-
-          await expect(donationsMgt.unPauseCause(1))
-            .to.emit(donationsMgt, "CauseUnPaused")
-            .withArgs(1);
-        });
-      });
-    });
-
-    describe("updateCauseBeneficiary", function () {
-      describe("Validations", function () {
-        it("should revert if cause does not exist", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await expect(
-            donationsMgt.updateCauseBeneficiary(100, otherAccount.address)
-          ).to.be.revertedWith("Cause does not exist");
-        });
-
-        it("should revert if caller is not owner", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-
-          await expect(
-            donationsMgt
-              .connect(otherAccount)
-              .updateCauseBeneficiary(1, otherAccount.address)
-          ).to.be.revertedWith("Caller is not the owner");
-        });
-
-        it("should revert if beneficiary is the same", async function () {
+      describe("Events", function () {
+        it("should emit CampaignCreated event", async function () {
           const { donationsMgt, owner } = await loadFixture(
             deployDonationsMgtFixture
           );
+          await expect(donationsMgt.createCampaign("Campaign 1"))
+            .to.emit(donationsMgt, "CampaignCreated")
+            .withArgs(
+              1,
+              "Campaign 1",
+              owner.address,
+              0,
+              true,
+              (await time.latest()) + 1
+            );
+        });
+      });
+    });
 
-          await donationsMgt.createCause("Cause 1");
-
-          await expect(
-            donationsMgt.updateCauseBeneficiary(1, owner.address)
-          ).to.be.revertedWith("Beneficiary is the same");
+    describe("deactivateCampaign", function () {
+      describe("Validations", function () {
+        it("should revert if campaign is not active", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.deactivateCampaign(1);
+          await expect(donationsMgt.deactivateCampaign(1)).to.be.revertedWith(
+            "Campaign is not active"
+          );
         });
 
-        it("should revert if cause is paused", async function () {
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await expect(donationsMgt.deactivateCampaign(2)).to.be.revertedWith(
+            "Campaign does not exist"
+          );
+        });
+
+        it("should revert if caller is not owner", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-          await donationsMgt.pauseCause(1);
-
+          await donationsMgt.createCampaign("Campaign 1");
           await expect(
-            donationsMgt.updateCauseBeneficiary(1, otherAccount.address)
-          ).to.be.revertedWith("Cause paused");
+            donationsMgt.connect(otherAccount).deactivateCampaign(1)
+          ).to.be.revertedWith("Caller is not owner");
+        });
+      });
+
+      describe("Functionality", function () {
+        it("should deactivate campaign", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.deactivateCampaign(1);
+          expect((await donationsMgt.getCampaign(1)).active).to.equal(false);
+        });
+      });
+
+      describe("Events", function () {
+        it("should emit CampaignDeactivated event", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          await expect(donationsMgt.deactivateCampaign(1))
+            .to.emit(donationsMgt, "CampaignDeactivated")
+            .withArgs(1);
+        });
+      });
+    });
+
+    describe("reactivateCampaign", function () {
+      describe("Validations", function () {
+        it("should revert if campaign is active", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          await expect(donationsMgt.reactivateCampaign(1)).to.be.revertedWith(
+            "Campaign already active"
+          );
+        });
+
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await expect(donationsMgt.reactivateCampaign(2)).to.be.revertedWith(
+            "Campaign does not exist"
+          );
+        });
+
+        it("should revert if caller is not owner", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.deactivateCampaign(1);
+          await expect(
+            donationsMgt.connect(otherAccount).reactivateCampaign(1)
+          ).to.be.revertedWith("Caller is not owner");
+        });
+      });
+
+      describe("Functionality", function () {
+        it("should reactivate campaign", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.deactivateCampaign(1);
+          await donationsMgt.reactivateCampaign(1);
+          expect((await donationsMgt.getCampaign(1)).active).to.equal(true);
+        });
+      });
+
+      describe("Events", function () {
+        it("should emit CampaignReactivated event", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.deactivateCampaign(1);
+          await expect(donationsMgt.reactivateCampaign(1))
+            .to.emit(donationsMgt, "CampaignReactivated")
+            .withArgs(1);
+        });
+      });
+    });
+
+    describe("updateCampaignBeneficiary", function () {
+      describe("Validations", function () {
+        it("should revert if caller is not owner", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+          await expect(
+            donationsMgt
+              .connect(otherAccount)
+              .updateCampaignBeneficiary(1, otherAccount.address)
+          ).to.be.revertedWith("Caller is not owner");
+        });
+
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt, owner } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await expect(
+            donationsMgt.updateCampaignBeneficiary(1, owner.address)
+          ).to.be.revertedWith("Campaign does not exist");
+        });
+
+        it("should revert if campaign is not active", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.deactivateCampaign(1);
+          await expect(
+            donationsMgt.updateCampaignBeneficiary(1, otherAccount.address)
+          ).to.be.revertedWith("Campaign is not active");
         });
 
         it("should revert if beneficiary is ZeroAddress", async function () {
           const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await donationsMgt.createCause("Cause 1");
-
+          await donationsMgt.createCampaign("Campaign 1");
           await expect(
-            donationsMgt.updateCauseBeneficiary(1, ethers.ZeroAddress)
+            donationsMgt.updateCampaignBeneficiary(1, ethers.ZeroAddress)
           ).to.be.revertedWith("Beneficiary address cannot be 0x0");
+        });
+
+        it("should revert if beneficiary is same", async function () {
+          const { donationsMgt, owner } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+          await expect(
+            donationsMgt.updateCampaignBeneficiary(1, owner.address)
+          ).to.be.revertedWith("Beneficiary address cannot be the same");
         });
       });
 
-      describe("Actions", function () {
-        it("should update cause beneficiary", async function () {
+      describe("Functionality", function () {
+        it("should set campaign beneficiary", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
-
-          await donationsMgt.createCause("Cause 1");
-
-          const cause = await donationsMgt.getCause(1);
-          await donationsMgt.updateCauseBeneficiary(1, otherAccount.address);
-          const causeAfter = await donationsMgt.getCause(1);
-
-          expect(cause.beneficiary).to.not.equal(otherAccount.address);
-          expect(causeAfter.beneficiary).to.equal(otherAccount.address);
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.updateCampaignBeneficiary(1, otherAccount.address);
+          expect((await donationsMgt.getCampaign(1)).beneficiary).to.equal(
+            otherAccount.address
+          );
         });
+      });
 
-        it('should emit "CauseBeneficiaryUpdated" event', async function () {
+      describe("Events", function () {
+        it("should emit CampaignBeneficiaryUpdated event", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
-
-          await donationsMgt.createCause("Cause 1");
-
+          await donationsMgt.createCampaign("Campaign 1");
           await expect(
-            donationsMgt.updateCauseBeneficiary(1, otherAccount.address)
+            donationsMgt.updateCampaignBeneficiary(1, otherAccount.address)
           )
-            .to.emit(donationsMgt, "CauseBeneficiaryUpdated")
+            .to.emit(donationsMgt, "CampaignBeneficiaryUpdated")
             .withArgs(1, otherAccount.address);
         });
       });
     });
 
-    describe("donateToCause", function () {
+    describe("getCampaign", function () {
       describe("Validations", function () {
-        it("should revert if cause paused", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await expect(donationsMgt.getCampaign(1)).to.be.revertedWith(
+            "Campaign does not exist"
           );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-          await donationsMgt.pauseCause(1);
-
-          await expect(
-            donationsMgt.connect(otherAccount).donateToCause(1, "", {
-              value: ethers.parseEther("0.01"),
-            })
-          ).to.be.revertedWith("Cause paused");
         });
 
-        it("should revert if cause does not exist", async function () {
+        it("should revert if campaign id is 0", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Test Campaign");
+          await expect(donationsMgt.getCampaign(0)).to.be.revertedWith(
+            "Campaign does not exist"
+          );
+        });
+      });
+
+      describe("Functionality", function () {
+        it("should return campaign", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          expect((await donationsMgt.getCampaign(1)).title).to.equal(
+            "Campaign 1"
+          );
+        });
+      });
+    });
+
+    describe("getAllCampaigns", function () {
+      describe("Functionality", function () {
+        it("should return all campaigns", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.createCampaign("Campaign 2");
+          await donationsMgt.createCampaign("Campaign 3");
+          expect(await donationsMgt.getAllCampaigns()).to.have.lengthOf(3);
+        });
+
+        it("should return empty array if no campaigns", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          expect(await donationsMgt.getAllCampaigns()).to.have.lengthOf(0);
+        });
+      });
+    });
+
+    describe("getCampaignDonors", function () {
+      describe("Validations", function () {
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await expect(donationsMgt.getCampaignDonors(1)).to.be.revertedWith(
+            "Campaign does not exist"
+          );
+        });
+      });
+
+      describe("Functionality", function () {
+        it("should return list of donor addresses", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.connect(otherAccount).donateToCampaign(1, "", {
+            value: 100,
+          });
 
+          expect(await donationsMgt.getCampaignDonors(1)).to.have.lengthOf(1);
+        });
+      });
+    });
+
+    describe("getCampaignDonations", function () {
+      describe("Validations", function () {
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await expect(donationsMgt.getCampaignDonations(1)).to.be.revertedWith(
+            "Campaign does not exist"
+          );
+        });
+      });
+
+      describe("Functionality", function () {
+        it("should return list of donations", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.connect(otherAccount).donateToCampaign(1, "", {
+            value: 100,
+          });
+
+          expect(await donationsMgt.getCampaignDonations(1)).to.have.lengthOf(
+            1
+          );
+        });
+      });
+    });
+
+    describe("getCampaignTotalDonations", function () {
+      describe("Validations", function () {
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
           await expect(
-            donationsMgt.connect(otherAccount).donateToCause(100, "", {
-              value: ethers.parseEther("0.01"),
-            })
-          ).to.be.revertedWith("Cause does not exist");
+            donationsMgt.getCampaignTotalDonations(1)
+          ).to.be.revertedWith("Campaign does not exist");
+        });
+      });
+
+      describe("Functionality", function () {
+        it("should return total donations", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await donationsMgt.createCampaign("Campaign 1");
+          expect(await donationsMgt.getCampaignTotalDonations(1)).to.equal(0);
+        });
+      });
+    });
+
+    describe("getCampaignWithdrawals", function () {
+      describe("Validations", function () {
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
+          await expect(
+            donationsMgt.getCampaignWithdrawals(1)
+          ).to.be.revertedWith("Campaign does not exist");
+        });
+      });
+
+      describe("Functionality", function () {
+        it("should return list of withdrawals", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.createCampaign("Campaign 2");
+          await donationsMgt.connect(otherAccount).donateToCampaign(1, "", {
+            value: 100,
+          });
+          await donationsMgt.withdrawFromCampaign(1, 50, "Withdrawal 1");
+          await donationsMgt.withdrawFromCampaign(1, 10, "Withdrawal 2");
+          expect(
+            await donationsMgt.connect(otherAccount).getCampaignWithdrawals(1)
+          ).to.have.lengthOf(2);
+        });
+      });
+    });
+
+    describe("donateToCampaign", function () {
+      describe("Validations", function () {
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await expect(
+            donationsMgt.donateToCampaign(1, otherAccount.address)
+          ).to.be.revertedWith("Campaign does not exist");
+        });
+
+        it("should revert if campaign is not active", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.deactivateCampaign(1);
+          await expect(
+            donationsMgt.donateToCampaign(1, otherAccount.address)
+          ).to.be.revertedWith("Campaign is not active");
         });
 
         it("should revert if donation amount is 0", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-
+          await donationsMgt.createCampaign("Campaign 1");
           await expect(
-            donationsMgt.connect(otherAccount).donateToCause(1, "", {
-              value: ethers.parseEther("0"),
+            donationsMgt.donateToCampaign(1, "", {
+              value: 0,
             })
-          ).to.be.revertedWith("Donation amount should be greater than 0");
+          ).to.be.revertedWith("Donation amount should be more than 0");
         });
       });
 
-      describe("Actions", function () {
-        it("should receive donation to a cause", async function () {
+      describe("Functionality", function () {
+        it("should increase total donations", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-          const value = ethers.parseEther("0.01");
-          const donations = await donationsMgt.getDonations(1);
-          await donationsMgt.donateToCause(1, "", {
-            value,
-          });
-          const donationsAfter = await donationsMgt.getDonations(1);
-          expect(donations.length).to.equal(0);
-          expect(donationsAfter.length).to.equal(1);
-          expect(await donationsMgt.totalDonations()).to.equal(value);
-          // expect wallet balance to be 0.01
-          expect(await donationsMgt.getBalance()).to.equal(value);
-        });
-
-        it('should emit "DonationMade" event', async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
+          await donationsMgt.createCampaign("Campaign 1");
+          const totalDonations = await donationsMgt.getCampaignTotalDonations(
+            1
           );
-
-          const value = ethers.parseEther("0.01");
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-
-          await expect(
-            donationsMgt.connect(otherAccount).donateToCause(1, "", {
-              value,
-            })
-          ).to.emit(donationsMgt, "DonationMade");
-        });
-
-        it('should set "Anonymous donation" as donation reason if reason is empty', async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          const value = ethers.parseEther("0.01");
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value,
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
           });
 
-          const donations = await donationsMgt.getDonations(1);
-
-          expect(donations[0].message).to.equal("Anonymous donation");
+          expect(totalDonations).to.equal(0);
+          expect(await donationsMgt.getCampaignTotalDonations(1)).to.equal(100);
         });
 
-        it("should set donation reason", async function () {
+        it("should increase campaign balance", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
+          });
+
+          expect((await donationsMgt.getCampaign(1)).balance).to.equal(100);
+        });
+
+        it("should add donation to campaign donations", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
 
-          const value = ethers.parseEther("0.01");
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
+          await donationsMgt.createCampaign("Campaign 1");
 
-          await donationsMgt.connect(otherAccount).donateToCause(1, "test", {
-            value,
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
           });
 
-          const donations = await donationsMgt.getDonations(1);
+          expect(await donationsMgt.getCampaignDonations(1)).to.have.lengthOf(
+            1
+          );
+        });
 
-          expect(donations[0].message).to.equal("test");
+        it("should add donation to campaign donations with message", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+
+          await donationsMgt.createCampaign("Campaign 1");
+
+          await donationsMgt.donateToCampaign(1, "Test", {
+            value: 100,
+          });
+
+          expect(await donationsMgt.getCampaignDonations(1)).to.have.lengthOf(
+            1
+          );
+          expect(
+            (await donationsMgt.getCampaignDonations(1))[0].message
+          ).to.equal("Test");
+        });
+
+        it("should add donation with empty message with default message", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+
+          await donationsMgt.createCampaign("Campaign 1");
+
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
+          });
+
+          expect(await donationsMgt.getCampaignDonations(1)).to.have.lengthOf(
+            1
+          );
+          expect(
+            (await donationsMgt.getCampaignDonations(1))[0].message
+          ).to.equal("Anonymous donation");
         });
       });
     });
 
-    describe("withdrawFromCause", function () {
+    describe("withdrawFromCampaign", function () {
       describe("Validations", function () {
-        it("should revert if cause does not exist", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await expect(
-            donationsMgt.withdrawFromCause(100, 1, "test")
-          ).to.be.revertedWith("Cause does not exist");
-        });
-
         it("should revert if caller is not beneficiary", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
+          await donationsMgt.createCampaign("Campaign 1");
 
-          await donationsMgt.createCause("Cause 1");
-
-          await expect(
-            donationsMgt.connect(otherAccount).withdrawFromCause(1, 1, "test")
-          ).to.be.revertedWith(
-            "Only the beneficiary can withdraw from the cause"
-          );
-        });
-
-        it("should revert if amount is greater than balance", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await donationsMgt.createCause("Cause 1");
-
-          await expect(
-            donationsMgt.withdrawFromCause(1, 1, "test")
-          ).to.be.revertedWith(
-            "Withdrawal amount should be less than or equal to the cause balance"
-          );
-        });
-
-        it("should revert if amount is 0", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await donationsMgt.createCause("Cause 1");
-
-          await expect(
-            donationsMgt.withdrawFromCause(1, 0, "test")
-          ).to.be.revertedWith("Withdrawal amount should be greater than 0");
-        });
-
-        it("should revert if cause is paused", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.connect(otherAccount).createCause("Cause 1");
-          await donationsMgt.pauseCause(1);
-
-          await expect(
-            donationsMgt.withdrawFromCause(1, 1, "test")
-          ).to.be.revertedWith("Cause paused");
-        });
-
-        it("should revert if reason is empty", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.createCause("Cause 1");
-
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("100"),
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
           });
 
           await expect(
-            donationsMgt.withdrawFromCause(1, 1, "")
+            donationsMgt
+              .connect(otherAccount)
+              .withdrawFromCampaign(1, otherAccount.address, 100)
+          ).to.be.revertedWith("Only beneficiary can withdraw");
+        });
+
+        it("should revert if campaign does not exist", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await expect(
+            donationsMgt.withdrawFromCampaign(1, otherAccount.address, 100)
+          ).to.be.revertedWith("Campaign does not exist");
+        });
+
+        it("should revert if campaign is not active", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+          await donationsMgt.deactivateCampaign(1);
+          await expect(
+            donationsMgt.withdrawFromCampaign(1, otherAccount.address, 100)
+          ).to.be.revertedWith("Campaign is not active");
+        });
+
+        it("should revert if withdrawal amount is 0", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+
+          await expect(
+            donationsMgt.withdrawFromCampaign(1, 0, "Test")
+          ).to.be.revertedWith("Withdrawal amount should be more than 0");
+        });
+
+        it("should revert if withdrawal amount is more than available balance", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
+          });
+
+          await expect(
+            donationsMgt.withdrawFromCampaign(1, otherAccount.address, 200)
+          ).to.be.revertedWith(
+            "Withdrawal amount is more than available balance"
+          );
+        });
+
+        it("should revert if withdrawal reason is empty", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+          await donationsMgt.createCampaign("Campaign 1");
+
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
+          });
+
+          await expect(
+            donationsMgt.withdrawFromCampaign(1, 50, "")
           ).to.be.revertedWith("Withdrawal reason cannot be empty");
         });
       });
 
-      describe("Actions", function () {
-        it("should withdraw from a cause", async function () {
+      describe("Functionality", function () {
+        it("should decrease campaign balance", async function () {
           const { donationsMgt, otherAccount } = await loadFixture(
             deployDonationsMgtFixture
           );
 
-          const value = ethers.parseEther("1");
-          await donationsMgt.createCause("Cause 1");
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value,
-          });
-          const cause = await donationsMgt.getCause(1);
-          await donationsMgt.withdrawFromCause(1, value, "test");
-          const causeAfter = await donationsMgt.getCause(1);
+          await donationsMgt.createCampaign("Campaign 1");
 
-          expect(cause.balance).to.equal(value);
-          expect(causeAfter.balance).to.equal(0);
-          expect(await donationsMgt.totalDonations()).to.equal(value);
-          // expect wallet balance to be 0
-          expect(await donationsMgt.getBalance()).to.equal(0);
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
+          });
+
+          await donationsMgt.withdrawFromCampaign(1, 50, "Withdrawal 1");
+
+          expect((await donationsMgt.getCampaign(1)).balance).to.equal(50);
         });
 
-        it('should emit "WithdrawalMade" event', async function () {
+        it("should add withdrawal to campaign withdrawals", async function () {
+          const { donationsMgt, otherAccount } = await loadFixture(
+            deployDonationsMgtFixture
+          );
+
+          await donationsMgt.createCampaign("Campaign 1");
+
+          await donationsMgt.donateToCampaign(1, "", {
+            value: 100,
+          });
+
+          await donationsMgt.withdrawFromCampaign(1, 50, "Withdrawal 1");
+
+          expect(await donationsMgt.getCampaignWithdrawals(1)).to.have.lengthOf(
+            1
+          );
+        });
+      });
+
+      describe("Events", function () {
+        it("should emit WithdrawalMade event", async function () {
           const { donationsMgt, otherAccount, owner } = await loadFixture(
             deployDonationsMgtFixture
           );
 
-          const value = ethers.parseEther("0.01");
-          await donationsMgt.connect(owner).createCause("Cause 1");
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value,
+          await donationsMgt.createCampaign("Campaign 1");
+
+          await donationsMgt.connect(otherAccount).donateToCampaign(1, "", {
+            value: 100,
           });
 
-          await expect(
-            donationsMgt.connect(owner).withdrawFromCause(1, value, "test")
-          ).to.emit(donationsMgt, "WithdrawalMade");
-        });
-      });
-    });
-
-    describe("getAllCauses", function () {
-      describe("Actions", function () {
-        it("should get all causes", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await donationsMgt.createCause("Cause 1");
-          await donationsMgt.createCause("Cause 2");
-          await donationsMgt.createCause("Cause 3");
-
-          const causes = await donationsMgt.getAllCauses();
-
-          expect(causes.length).to.equal(3);
-        });
-
-        it("should return empty array if no causes", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          const causes = await donationsMgt.getAllCauses();
-
-          expect(causes.length).to.equal(0);
-        });
-      });
-    });
-
-    describe("getCause", function () {
-      describe("Actions", function () {
-        it("should get cause", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await donationsMgt.createCause("Cause 1");
-          await donationsMgt.createCause("Cause 2");
-          await donationsMgt.createCause("Cause 3");
-
-          const cause = await donationsMgt.getCause(2);
-
-          expect(cause.id).to.equal(2);
-          expect(cause.title).to.equal("Cause 2");
-        });
-      });
-
-      describe("Validations", function () {
-        it("should revert if cause does not exist", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          await expect(donationsMgt.getCause(100)).to.be.revertedWith(
-            "Cause does not exist"
-          );
-        });
-      });
-    });
-
-    describe("getDonations", function () {
-      describe("Actions", function () {
-        it("should get donations", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.createCause("Cause 1");
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.01"),
-          });
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.02"),
-          });
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.03"),
-          });
-
-          const donations = await donationsMgt.getDonations(1);
-
-          expect(donations.length).to.equal(3);
-        });
-
-        it("should return empty array if cause does not exist", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          const donations = await donationsMgt.getDonations(100);
-
-          expect(donations.length).to.equal(0);
-        });
-      });
-    });
-
-    describe("getWithdrawals", function () {
-      describe("Actions", function () {
-        it("should get withdrawals for a specific cause", async function () {
-          const { donationsMgt, otherAccount, owner } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.connect(owner).createCause("Cause 1");
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.01"),
-          });
-          await donationsMgt.connect(owner).withdrawFromCause(1, 1, "test");
-          await donationsMgt.connect(owner).withdrawFromCause(1, 1, "test");
-          await donationsMgt.connect(owner).withdrawFromCause(1, 1, "test");
-
-          const withdrawals = await donationsMgt.getWithdrawals(1);
-
-          expect(withdrawals.length).to.equal(3);
-        });
-
-        it("should return empty array if cause does not exist", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          const withdrawals = await donationsMgt.getWithdrawals(100);
-
-          expect(withdrawals.length).to.equal(0);
-        });
-      });
-    });
-
-    describe("totalDonations", function () {
-      describe("Actions", function () {
-        it("should get total donations", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.createCause("Cause 1");
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.01"),
-          });
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.02"),
-          });
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.03"),
-          });
-
-          expect(await donationsMgt.totalDonations()).to.equal(
-            ethers.parseEther("0.06")
-          );
-        });
-
-        it("should return 0 if no donations", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          expect(await donationsMgt.totalDonations()).to.equal(0);
-        });
-      });
-    });
-
-    describe("totalDonationsByCause", function () {
-      describe("Actions", function () {
-        it("should get total donations for a specific cause", async function () {
-          const { donationsMgt, otherAccount } = await loadFixture(
-            deployDonationsMgtFixture
-          );
-
-          await donationsMgt.createCause("Cause 1");
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.01"),
-          });
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.02"),
-          });
-          await donationsMgt.connect(otherAccount).donateToCause(1, "", {
-            value: ethers.parseEther("0.03"),
-          });
-
-          expect(await donationsMgt.totalDonationsByCause(1)).to.equal(
-            ethers.parseEther("0.06")
-          );
-        });
-
-        it("should return 0 if cause does not exist or no donations", async function () {
-          const { donationsMgt } = await loadFixture(deployDonationsMgtFixture);
-
-          expect(await donationsMgt.totalDonationsByCause(100)).to.equal(0);
+          await expect(donationsMgt.withdrawFromCampaign(1, 50, "Withdrawal 1"))
+            .to.emit(donationsMgt, "WithdrawalMade")
+            .withArgs(
+              1,
+              1,
+              owner.address,
+              50,
+              "Withdrawal 1",
+              (await time.latest()) + 1
+            );
         });
       });
     });
