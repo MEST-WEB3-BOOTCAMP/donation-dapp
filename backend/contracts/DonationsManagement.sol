@@ -1,7 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+import "./Counter.sol";
+
 contract DonationsManagement {
+    using Counter for Counter.Value;
+    Counter.Value private campaignId;
+    Counter.Value private donationId;
+    Counter.Value private withdrawalId;
+    Counter.Value private totalDonations;
+    mapping(uint => Campaign) private campaigns;
+    mapping(uint => uint) private totalDonationsByCampaignId;
+    mapping(uint => mapping(address => uint)) private donationsByCampaignId;
+    mapping(uint => address[]) private donorsByCampaignId;
+    address public immutable owner = msg.sender;
+
     struct Campaign {
         uint id;
         string title;
@@ -11,23 +24,23 @@ contract DonationsManagement {
         uint timestamp;
     }
 
-    struct Donation {
-        uint id;
-        uint campaignId;
-        address donor;
-        uint amount;
-        string message;
-        uint timestamp;
-    }
+    event Donation(
+        uint id,
+        uint campaignId,
+        address donor,
+        uint amount,
+        string message,
+        uint timestamp
+    );
 
-    struct Withdrawal {
-        uint id;
-        uint campaignId;
-        address beneficiary;
-        uint amount;
-        string reason;
-        uint timestamp;
-    }
+    event Withdrawal(
+        uint id,
+        uint campaignId,
+        address beneficiary,
+        uint amount,
+        string reason,
+        uint timestamp
+    );
 
     event CampaignCreated(
         uint indexed id,
@@ -47,34 +60,6 @@ contract DonationsManagement {
         address beneficiary
     );
 
-    event DonationMade(
-        uint indexed donationId,
-        uint indexed campaignId,
-        address indexed donor,
-        uint amount,
-        string message,
-        uint timestamp
-    );
-
-    event WithdrawalMade(
-        uint indexed withdrawalId,
-        uint indexed campaignId,
-        address indexed beneficiary,
-        uint amount,
-        string reason,
-        uint timestamp
-    );
-
-    address public immutable owner = msg.sender;
-    uint public totalDonations;
-    uint private campaignId;
-    uint private donationId;
-    uint private withdrawalId;
-    mapping(uint => Campaign) private campaigns;
-    mapping(uint => Donation[]) private donationsByCampaignId;
-    mapping(uint => uint) private totalDonationsByCampaignId;
-    mapping(uint => Withdrawal[]) private withdrawalsByCampaignId;
-
     modifier activeCampaign(uint _campaignId) {
         require(campaigns[_campaignId].active, "Campaign is not active");
         _;
@@ -82,7 +67,7 @@ contract DonationsManagement {
 
     modifier campaignExists(uint _campaignId) {
         require(
-            _campaignId != 0 && _campaignId <= campaignId,
+            _campaignId > 0 && _campaignId <= campaignId.get(),
             "Campaign does not exist"
         );
         _;
@@ -95,9 +80,10 @@ contract DonationsManagement {
 
     function createCampaign(string calldata _title) external {
         require(bytes(_title).length > 0, "Campaign title cannot be empty");
-        campaignId++;
-        campaigns[campaignId] = Campaign(
-            campaignId,
+        campaignId.increment();
+        uint _campaignId = campaignId.get();
+        campaigns[_campaignId] = Campaign(
+            _campaignId,
             _title,
             msg.sender,
             0,
@@ -105,7 +91,7 @@ contract DonationsManagement {
             block.timestamp
         );
         emit CampaignCreated(
-            campaignId,
+            _campaignId,
             _title,
             msg.sender,
             0,
@@ -162,8 +148,9 @@ contract DonationsManagement {
     }
 
     function getAllCampaigns() external view returns (Campaign[] memory) {
-        Campaign[] memory _campaigns = new Campaign[](campaignId);
-        for (uint i = 1; i <= campaignId; i++) {
+        uint totalCampaigns = campaignId.get();
+        Campaign[] memory _campaigns = new Campaign[](totalCampaigns);
+        for (uint i = 1; i <= totalCampaigns; i++) {
             _campaigns[i - 1] = campaigns[i];
         }
         return _campaigns;
@@ -172,31 +159,13 @@ contract DonationsManagement {
     function getCampaignDonors(
         uint _campaignId
     ) external view campaignExists(_campaignId) returns (address[] memory) {
-        address[] memory _donors = new address[](
-            donationsByCampaignId[_campaignId].length
-        );
-        for (uint i = 0; i < donationsByCampaignId[_campaignId].length; i++) {
-            _donors[i] = donationsByCampaignId[_campaignId][i].donor;
-        }
-        return _donors;
-    }
-
-    function getCampaignDonations(
-        uint _campaignId
-    ) external view campaignExists(_campaignId) returns (Donation[] memory) {
-        return donationsByCampaignId[_campaignId];
+        return donorsByCampaignId[_campaignId];
     }
 
     function getCampaignTotalDonations(
         uint _campaignId
     ) external view campaignExists(_campaignId) returns (uint) {
         return totalDonationsByCampaignId[_campaignId];
-    }
-
-    function getCampaignWithdrawals(
-        uint _campaignId
-    ) external view campaignExists(_campaignId) returns (Withdrawal[] memory) {
-        return withdrawalsByCampaignId[_campaignId];
     }
 
     function donateToCampaign(
@@ -207,22 +176,17 @@ contract DonationsManagement {
         if (bytes(_message).length == 0) {
             _message = "Anonymous donation";
         }
-        totalDonations += msg.value;
+        donationId.increment();
+        uint _donationId = donationId.get();
+        totalDonations.add(msg.value);
+        if (donationsByCampaignId[_campaignId][msg.sender] == 0) {
+            donorsByCampaignId[_campaignId].push(msg.sender);
+        }
+        donationsByCampaignId[_campaignId][msg.sender] += msg.value;
         totalDonationsByCampaignId[_campaignId] += msg.value;
         campaigns[_campaignId].balance += msg.value;
-        donationsByCampaignId[_campaignId].push(
-            Donation(
-                donationId,
-                _campaignId,
-                msg.sender,
-                msg.value,
-                _message,
-                block.timestamp
-            )
-        );
-        donationId++;
-        emit DonationMade(
-            donationId,
+        emit Donation(
+            _donationId,
             _campaignId,
             msg.sender,
             msg.value,
@@ -249,21 +213,12 @@ contract DonationsManagement {
             bytes(_message).length > 0,
             "Withdrawal reason cannot be empty"
         );
+
         campaigns[_campaignId].balance -= _amount;
-        withdrawalId++;
-        withdrawalsByCampaignId[_campaignId].push(
-            Withdrawal(
-                withdrawalId,
-                _campaignId,
-                msg.sender,
-                _amount,
-                _message,
-                block.timestamp
-            )
-        );
+        withdrawalId.increment();
         payable(campaigns[_campaignId].beneficiary).transfer(_amount);
-        emit WithdrawalMade(
-            withdrawalId,
+        emit Withdrawal(
+            withdrawalId.get(),
             _campaignId,
             msg.sender,
             _amount,
