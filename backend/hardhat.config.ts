@@ -12,7 +12,15 @@ const {
 } = process.env;
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.19",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000,
+      },
+    },
+  },
   gasReporter: {
     currency: "USD",
     gasPrice: 21,
